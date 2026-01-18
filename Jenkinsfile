@@ -20,5 +20,14 @@ pipeline {
                 '''
             }
         }
+        stage('Test'){
+            agent{
+                    image 'node:18-alpine'
+                    reuseNode true
+            }
+        }
+        steps{
+            echo 'Test'
+        }
     }
 }
