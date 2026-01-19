@@ -4,6 +4,7 @@ pipeline {
     environment{
         NETLIFY_SITE_ID = '1a1a4896-0179-437f-801d-d281255f0535'
         NETLIFY_AUTH_TOKEN = credentials('Netlify-Token')
+        REACT_APP_VERSION = "1.0.$BUILD_ID"
     }
 
     stages {
@@ -90,6 +91,15 @@ pipeline {
                 '''
             }
         }
+
+        stage('Approval'){
+            steps{
+                timeout(time: 15, unit: 'MINUTES'){
+                    input message: 'Do you wish to deploy to Production?', ok: 'Yes!'
+                }
+            }
+        }
+
         stage('Deploy production') {
             agent {
                 docker {
@@ -106,6 +116,31 @@ pipeline {
                     node_modules/.bin/netlify deploy --dir=build --prod
                 '''
             }
-        }        
+        }   
+        
+        stage('Prod E2E') {
+            agent {
+                docker {
+                    image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                    reuseNode true
+                }
+            }
+
+            environment {
+                CI_ENVIRONMENT_URL = 'PUT YOUR NETLIFY SITE URL HERE'
+            }
+
+            steps {
+                sh '''
+                    npx playwright test  --reporter=html
+                '''
+            }
+
+            post {
+                always {
+                    publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Playwright E2E', reportTitles: '', useWrapperFileDirectly: true])
+                }
+            }
+        }     
     }
 }
