@@ -118,7 +118,7 @@ pipeline {
             }
 
             environment {
-                CI_ENVIRONMENT_URL = 'YOUR NETLIFY SITE URL'
+                CI_ENVIRONMENT_URL = 'https://comfy-jalebi-139bd0.netlify.app'
             }
 
             steps {
